@@ -1,8 +1,9 @@
 package com.blockmovers.plugins.simplejail;
 
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.Logger;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandException;
 import org.bukkit.command.CommandSender;
@@ -15,12 +16,27 @@ public class SimpleJail extends JavaPlugin {
 
     static final Logger log = Logger.getLogger("Minecraft"); //set up our logger
     public Configuration config = new Configuration(this);
+    public List<String> jailed = new ArrayList();
 
     public void onEnable() {
         PluginDescriptionFile pdffile = this.getDescription();
         PluginManager pm = this.getServer().getPluginManager(); //the plugin object which allows us to add listeners later on
 
         config.loadConfiguration();
+
+        getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+
+            public void run() {
+                if (!jailed.isEmpty()) {
+                    List<String> jailedList = new ArrayList(jailed);
+                    Iterator<String> jailee = jailedList.iterator();
+                    while (jailee.hasNext()) {
+                        String convict = jailee.next();
+                        isJailed(convict);
+                    }
+                }
+            }
+        }, 600L, 600L);
 
         pm.registerEvents(new Listeners(this), this);
 
@@ -37,18 +53,116 @@ public class SimpleJail extends JavaPlugin {
     @Override
     public boolean onCommand(CommandSender cs, Command cmd, String alias, String[] args) {
         if (args.length >= 1) {
-            if (args[0] == "a" | args[0] == "add") {
+            if (args[0].equalsIgnoreCase("a") || args[0].equalsIgnoreCase("add")) {
+                String time = "";
                 if (cs instanceof Player) {
-                    if (cs.hasPermission("simplejail.jailor")) {
-                        
+                    if (!cs.hasPermission("simplejail.jailor")) {
+                        cs.sendMessage(ChatColor.RED + "You don't have permission to do this.");
+                        return false;
                     }
                 }
+                if (args.length == 1) {
+                    cs.sendMessage(ChatColor.RED + "You need to specify a user.");
+                    return false;
+                }
+                String player = null;
+                Boolean online = false;
+                if (getServer().getPlayer(args[1]) != null) {
+                    player = getServer().getPlayer(args[1]).getName();
+                    online = true;
+                    if (getServer().getPlayer(args[1]).hasPermission("simplejail.unjailable")) {
+                        cs.sendMessage(ChatColor.RED + "Player not jailable.");
+                        return false;
+                    }
+                } else if (getServer().getOfflinePlayer(args[1]).hasPlayedBefore()) {
+                    player = getServer().getOfflinePlayer(args[1]).getName();
+                    online = false;
+                } else {
+                    cs.sendMessage(ChatColor.RED + "Player not found.");
+                    return false;
+                }
+                if (args.length == 3) {
+                    time = args[2];
+                }
+                this.jailAdd(player, time, online);
+                if (online == true) {
+                    getServer().getPlayer(args[1]).sendMessage(this.replaceText(config.jailAddJailee, cs.getName()));
+                }
+                cs.sendMessage(this.replaceText(config.jailAddJailor, player));
+                return true;
             }
-            //jail a or add
-            //jail r or release
-            //jail set jail
-            //jail set leave
+            if (args[0].equalsIgnoreCase("r") || args[0].equalsIgnoreCase("release")) {
+                if (cs instanceof Player) {
+                    if (!cs.hasPermission("simplejail.jailor")) {
+                        cs.sendMessage(ChatColor.RED + "You don't have permission to do this.");
+                        return false;
+                    }
+                }
+                if (args.length == 1) {
+                    cs.sendMessage(ChatColor.RED + "You need to specify a user.");
+                    return false;
+                }
+                String player = null;
+                Boolean online = false;
+
+                if (config.jailedPlayers.contains(args[1])) {
+                    player = args[1];
+                    if (getServer().getPlayerExact(args[1]) != null) {
+                        if (getServer().getPlayerExact(args[1]).isOnline()) {
+                            online = true;
+                        } else {
+                            online = false;
+                        }
+                    }
+                } else {
+                    cs.sendMessage(ChatColor.RED + "User not found.");
+                    return false;
+                }
+                this.jailRelease(player, online, true);
+                getServer().getPlayer(args[1]).sendMessage(this.replaceText(config.jailLeaveJailee, ""));
+                cs.sendMessage(this.replaceText(config.jailLeaveJailor, player));
+                return true;
+            }
+            if (args[0].equalsIgnoreCase("set")) {
+                if (cs instanceof Player) {
+                    if (!cs.hasPermission("simplejail.admin")) {
+                        cs.sendMessage(ChatColor.RED + "You don't have permission to do this.");
+                        return false;
+                    }
+                } else {
+                    cs.sendMessage(ChatColor.RED + "You do that from the console.");
+                }
+                if (args.length == 1) {
+                    cs.sendMessage("Valid options are jail or leave (command).");
+                    return false;
+                }
+                Player p = (Player) cs;
+                if (args[1].equalsIgnoreCase("jail")) {
+                    Location loc = p.getLocation();
+
+                    config.updateCoords(loc);
+                    p.sendMessage(this.replaceText(config.jailAdminJail, ""));
+                    return true;
+                } else if (args[1].equalsIgnoreCase("leave")) {
+                    if (args.length >= 3) {
+                        String command = "";
+                        for (int i = 2; i < args.length; i++) {
+                            command += (i == args.length - 1) ? args[i] : args[i] + " ";
+                        }
+                        config.updateCommand(command);
+                        p.sendMessage(this.replaceText(config.jailAdminCommand, ""));
+                        return true;
+                    } else {
+                        p.sendMessage(ChatColor.RED + "You need to specify a command.");
+                        return false;
+                    }
+                } else {
+                    cs.sendMessage("Valid options to set are: jail or leave (command).");
+                    return false;
+                }
+            }
         }
+
         return false;
     }
 
@@ -58,41 +172,81 @@ public class SimpleJail extends JavaPlugin {
         return string;
     }
 
-    public void jailAdd(Player p, String time) {
-        config.jailedPlayers.set(p.getName(), this.getDate(time));
+    public void jailAdd(String p, String time, Boolean online) {
+        Long jailTime = this.getDate(time);
+        config.jailedPlayers.set(p, jailTime);
         config.savejailedPlayers();
+        if (online == true) {
+            this.teleportToJail(getServer().getPlayer(p));
+            if (jailTime != 0) {
+                this.jailed.add(p);
+            }
+        }
     }
 
-    public void jailRelease(Player p) {
-        config.jailedPlayers.set(p.getName(), null);
-        try {
-            getServer().dispatchCommand(p, config.jailLeaveCommand);
-        }
-        finally {
-            p.chat("/" + config.jailLeaveCommand);
-        }
+    public void jailRelease(String p, Boolean online, Boolean cmds) {
+        if (online) {
+            Player player = getServer().getPlayer(p);
+            config.jailedPlayers.set(player.getName(), null);
+            config.savejailedPlayers();
+            if (this.jailed.contains(p)) {
+                this.jailed.remove(p);
+            }
 
-        p.sendMessage(this.replaceText(config.jailLeaveString, ""));
+            if (cmds) {
+                for (String cmd : config.jailLeaveCommand) {
+                    try {
+                        getServer().dispatchCommand(player, cmd);
+                    } catch (CommandException e) {
+                        player.chat("/" + cmd);
+                    }
+                }
+            }
+        } else {
+            config.jailedPlayers.set(p, -1);
+            config.savejailedPlayers();
+        }
     }
 
-    public long jailedUntil(Player p) {
-        if (config.jailedPlayers.contains(p.getName())) {
-            return config.jailedPlayers.getLong(p.getName());
+    public long jailedUntil(String p) {
+        if (config.jailedPlayers.contains(p)) {
+            return config.jailedPlayers.getLong(p);
         }
         return 0;
     }
 
-    public boolean isJailed(Player p) {
-        if (config.jailedPlayers.contains(p.getName())) {
+    public boolean isJailed(String p) {
+        if (config.jailedPlayers.contains(p)) {
             long timestamp = System.currentTimeMillis() / 1000L;
-            if (this.jailedUntil(p) > timestamp) {
+            Long jailedUntil = this.jailedUntil(p);
+            if (getServer().getPlayer(p) != null) {
+                if (getServer().getPlayer(p).hasPermission("simplejail.unjailable")) {
+                    this.jailRelease(p, true, false);
+                }
+            }
+            if (jailedUntil == 0) {
+                this.jailed.add(p);
                 return true;
             }
+            if (jailedUntil > timestamp) {
+                this.jailed.add(p);
+                return true;
+            }
+            this.jailRelease(p, true, true);
+            getServer().getPlayer(p).sendMessage(this.replaceText(config.jailLeaveJailee, ""));
         }
         return false;
     }
 
+    public void teleportToJail(Player p) {
+        String[] jailCoords = this.config.jailCoords;
+        p.teleport(new Location(p.getServer().getWorld(jailCoords[0]), Double.valueOf(jailCoords[1]), Double.valueOf(jailCoords[2]), Double.valueOf(jailCoords[3]), Float.valueOf(jailCoords[4]), Float.valueOf(jailCoords[5])));
+    }
+
     public long getDate(String filter) {
+        if (filter.equalsIgnoreCase("")) {
+            return 0;
+        }
         if (filter.equalsIgnoreCase("now")) {
             return System.currentTimeMillis();
         }

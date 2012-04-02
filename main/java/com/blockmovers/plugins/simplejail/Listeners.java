@@ -4,14 +4,11 @@
  */
 package com.blockmovers.plugins.simplejail;
 
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.*;
 
 /**
  *
@@ -34,7 +31,7 @@ public class Listeners implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (plugin.isJailed(event.getPlayer())) {
+        if (plugin.isJailed(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
     }
@@ -44,7 +41,7 @@ public class Listeners implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (plugin.isJailed(event.getPlayer())) {
+        if (plugin.isJailed(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
     }
@@ -54,7 +51,7 @@ public class Listeners implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (plugin.isJailed(event.getPlayer())) {
+        if (plugin.isJailed(event.getPlayer().getName())) {
             event.setCancelled(true);
         }
     }
@@ -65,7 +62,7 @@ public class Listeners implements Listener {
             return;
         }
         if (!plugin.config.jailChat) {
-            if (plugin.isJailed(event.getPlayer())) {
+            if (plugin.isJailed(event.getPlayer().getName())) {
                 event.setCancelled(true);
             }
         }
@@ -76,8 +73,22 @@ public class Listeners implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (plugin.isJailed(event.getPlayer())) {
+        if (plugin.isJailed(event.getPlayer().getName())) {
             event.setCancelled(true);
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        if (plugin.isJailed(event.getPlayer().getName())) {
+            plugin.teleportToJail(event.getPlayer());
+        }
+    }
+    
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (plugin.jailed.contains(event.getPlayer().getName())) {
+            plugin.jailed.remove(event.getPlayer().getName());
         }
     }
 }

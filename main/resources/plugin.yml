@@ -19,3 +19,6 @@ permissions:
   simplejail.jailor:
     default: false
     description: Can jail/unjail people
+  simplejail.admin:
+    default: false
+    description: Can set the jail point and unjail command
