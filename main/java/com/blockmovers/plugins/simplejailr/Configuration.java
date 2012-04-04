@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.blockmovers.plugins.simplejailr;
 
 import java.io.File;
@@ -14,10 +10,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-/**
- *
- * @author MattC
- */
 public class Configuration {
 
     SimpleJailr plugin = null;

@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.blockmovers.plugins.simplejailr;
 
 import org.bukkit.entity.Player;
@@ -11,17 +7,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.*;
 
-/**
- *
- * @author MattC
- */
 public class Listeners implements Listener {
 
     SimpleJailr plugin = null;
-    //Config settings
-    //Integer chanceAnnounce = null;
-    //Boolean defaultNobreak = null;
-    //String stringNoplant = null;
 
     public Listeners(SimpleJailr plugin) {
         this.plugin = plugin;
