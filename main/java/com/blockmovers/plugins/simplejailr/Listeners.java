@@ -3,8 +3,6 @@ package com.blockmovers.plugins.simplejailr;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.*;
 
 public class Listeners implements Listener {
@@ -15,32 +13,50 @@ public class Listeners implements Listener {
         this.plugin = plugin;
     }
 
-    @EventHandler
-    public void onBlockPlace(BlockPlaceEvent event) {
-        if (event.isCancelled()) {
-            return;
-        }
-        if (plugin.isJailed(event.getPlayer().getName())) {
-            event.setCancelled(true);
-        }
-    }
-
-    @EventHandler
-    public void onBlockBreak(BlockBreakEvent event) {
-        if (event.isCancelled()) {
-            return;
-        }
-        if (plugin.isJailed(event.getPlayer().getName())) {
-            event.setCancelled(true);
-        }
-    }
-
+//    @EventHandler
+//    public void onBlockPlace(BlockPlaceEvent event) {
+//        if (event.isCancelled()) {
+//            return;
+//        }
+//        Player p = event.getPlayer();
+//        String player = p.getName();
+//        if (plugin.isJailed(player)) {
+//            if (plugin.config.jailGriefingextends) {
+//                plugin.jailAddTime(player);
+//                p.sendMessage(plugin.replaceText(plugin.config.jailInfoTimeextended, player, plugin.timeToString(plugin.config.jailExtendtime)));
+//            }
+//            event.setCancelled(true);
+//        }
+//    }
+//
+//    @EventHandler
+//    public void onBlockBreak(BlockBreakEvent event) {
+//        if (event.isCancelled()) {
+//            return;
+//        }
+//        Player p = event.getPlayer();
+//        String player = p.getName();
+//        if (plugin.isJailed(player)) {
+//            if (plugin.config.jailGriefingextends) {
+//                plugin.jailAddTime(player);
+//                p.sendMessage(plugin.replaceText(plugin.config.jailInfoTimeextended, player, plugin.timeToString(plugin.config.jailExtendtime)));
+//            }
+//            event.setCancelled(true);
+//        }
+//    }
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.isCancelled()) {
             return;
         }
-        if (plugin.isJailed(event.getPlayer().getName())) {
+        Player p = event.getPlayer();
+        String player = p.getName();
+        if (plugin.isJailed(player)) {
+            if (plugin.config.jailGriefingextends) {
+                if (plugin.jailAddTime(player)) {
+                    p.sendMessage(plugin.replaceText(plugin.config.jailInfoTimeextended, player, plugin.timeToString(plugin.config.jailExtendtime)));
+                }
+            }
             event.setCancelled(true);
         }
     }
@@ -75,7 +91,7 @@ public class Listeners implements Listener {
             }
         }
     }
-    
+
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (plugin.isJailed(event.getPlayer().getName())) {
@@ -85,7 +101,7 @@ public class Listeners implements Listener {
             p.sendMessage(plugin.replaceText(plugin.config.jailInfoSelf, "", plugin.jailTimeLeftString(player)));
         }
     }
-    
+
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
         if (plugin.jailed.contains(event.getPlayer().getName())) {

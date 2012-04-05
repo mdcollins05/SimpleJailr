@@ -28,6 +28,7 @@ public class Configuration {
     String jailInfoOther = null;
     String jailInfoNotinSelf = null;
     String jailInfoNotinOther = null;
+    String jailInfoTimeextended = null;
     String jailMiscNoperm = null;
     String jailMiscNoconsole = null;
     String jailMiscNosuchuser = null;
@@ -45,6 +46,8 @@ public class Configuration {
     String jailMiscOff = null;
     String[] jailCoords = null;
     Boolean jailChat = false;
+    Boolean jailGriefingextends = null;
+    Integer jailExtendtime = null;
     String jailAdminJail = null;
     String jailAdminCommand = null;
     String jailAdminChaton = null;
@@ -67,6 +70,7 @@ public class Configuration {
         this.plugin.getConfig().addDefault("string.info.other", "$s $p has $t left in jail!");
         this.plugin.getConfig().addDefault("string.info.notin.self", "$s You are not in jail!");
         this.plugin.getConfig().addDefault("string.info.notin.other", "$s $p is not in jail!");
+        this.plugin.getConfig().addDefault("string.info.extended", "$s You have extended your stay by $t!");
 
         this.plugin.getConfig().addDefault("string.misc.noperm", "$s You do not have permission for that!");
         this.plugin.getConfig().addDefault("string.misc.noconsole", "$s You cannot do that from the console!");
@@ -87,6 +91,8 @@ public class Configuration {
 
         this.plugin.getConfig().addDefault("jail.coords", "world,x,y,z,yaw,pitch");
         this.plugin.getConfig().addDefault("jail.allowchat", false);
+        this.plugin.getConfig().addDefault("jail.griefingextends", true);
+        this.plugin.getConfig().addDefault("jail.extendtime", 30);
 
         this.plugin.getConfig().addDefault("string.admin.jail", "$s You set the jail point!");
         this.plugin.getConfig().addDefault("string.admin.command", "$s You set the jail leave command!");
@@ -113,6 +119,7 @@ public class Configuration {
         this.jailInfoOther = this.plugin.getConfig().getString("string.info.other");
         this.jailInfoNotinSelf = this.plugin.getConfig().getString("string.info.notin.self");
         this.jailInfoNotinOther = this.plugin.getConfig().getString("string.info.notin.other");
+        this.jailInfoTimeextended = this.plugin.getConfig().getString("string.info.extended");
 
         this.jailMiscNoperm = this.plugin.getConfig().getString("string.misc.noperm");
         this.jailMiscNoconsole = this.plugin.getConfig().getString("string.misc.noconsole");
@@ -133,6 +140,8 @@ public class Configuration {
 
         this.jailCoords = this.plugin.getConfig().getString("jail.coords").split(",");
         this.jailChat = this.plugin.getConfig().getBoolean("jail.allowchat");
+        this.jailGriefingextends = this.plugin.getConfig().getBoolean("jail.griefingextends");
+        this.jailExtendtime = this.plugin.getConfig().getInt("jail.extendtime");
 
         this.jailAdminJail = this.plugin.getConfig().getString("string.admin.jail");
         this.jailAdminCommand = this.plugin.getConfig().getString("string.admin.command");

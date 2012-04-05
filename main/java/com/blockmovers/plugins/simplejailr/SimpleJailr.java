@@ -257,11 +257,15 @@ public class SimpleJailr extends JavaPlugin {
 
     public void jailAdd(String p, String time, Boolean online) {
         Long jailTime = this.getDate(time);
-        config.jailedPlayers.set(p, jailTime);
+        this.jailAdd(p, jailTime, online);
+    }
+
+    public void jailAdd(String p, Long time, Boolean online) {
+        config.jailedPlayers.set(p, time);
         config.savejailedPlayers();
         if (online == true) {
             this.teleportToJail(getServer().getPlayer(p));
-            if (jailTime != 0) {
+            if (time != 0) {
                 this.jailed.add(p);
             }
         }
@@ -301,6 +305,18 @@ public class SimpleJailr extends JavaPlugin {
             return config.jailedPlayers.getLong(p);
         }
         return 0;
+    }
+
+    public Boolean jailAddTime(String p) {
+        if (this.isJailed(p)) {
+            Long time = this.jailedUntil(p);
+            if (time > 0) {
+                time = time + this.config.jailExtendtime;
+                this.jailAdd(p, time, false);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isJailed(String p) {
@@ -357,6 +373,10 @@ public class SimpleJailr extends JavaPlugin {
             return config.jailMiscForever;
         }
 
+        return this.timeToString(time);
+    }
+
+    public String timeToString(Integer time) {
         StringBuilder sb = new StringBuilder();
         String s = null;
         Integer temp = 0;
