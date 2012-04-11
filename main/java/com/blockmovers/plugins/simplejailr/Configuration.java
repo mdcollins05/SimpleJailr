@@ -21,9 +21,11 @@ public class Configuration {
     String[] jailLeaveCommand = null;
     String jailLeaveJailee = null;
     String jailLeaveJailor = null;
+    String jailLeaveBroadcast = null;
     String jailAddJailee = null;
     String jailAddJailor = null;
     String jailAddBlocked = null;
+    String jailAddBroadcast = null;
     String jailInfoSelf = null;
     String jailInfoOther = null;
     String jailInfoNotinSelf = null;
@@ -48,6 +50,7 @@ public class Configuration {
     Boolean jailChat = false;
     Boolean jailGriefingextends = null;
     Integer jailExtendtime = null;
+    Boolean jailBroadcast = null;
     String jailAdminJail = null;
     String jailAdminCommand = null;
     String jailAdminChaton = null;
@@ -61,10 +64,12 @@ public class Configuration {
         this.plugin.getConfig().addDefault("jail.leave.command", "spawn");
         this.plugin.getConfig().addDefault("string.leave.jailee", "$s You have been released from jail!");
         this.plugin.getConfig().addDefault("string.leave.jailor", "$s You have released $p from jail!");
+        this.plugin.getConfig().addDefault("string.leave.broadcast", "$s $p was released from jail!");
 
         this.plugin.getConfig().addDefault("string.add.jailee", "$s You have been thrown in jail by $p for $t!");
         this.plugin.getConfig().addDefault("string.add.jailor", "$s You have thrown $p in jail for $t!");
         this.plugin.getConfig().addDefault("string.add.blocked", "$s You cannot throw $p in jail!");
+        this.plugin.getConfig().addDefault("string.add.broadcast", "$s $p was jailed for $t!");
 
         this.plugin.getConfig().addDefault("string.info.self", "$s You have $t left in jail!");
         this.plugin.getConfig().addDefault("string.info.other", "$s $p has $t left in jail!");
@@ -93,6 +98,7 @@ public class Configuration {
         this.plugin.getConfig().addDefault("jail.allowchat", false);
         this.plugin.getConfig().addDefault("jail.griefingextends", true);
         this.plugin.getConfig().addDefault("jail.extendtime", 30);
+        this.plugin.getConfig().addDefault("jail.broadcast", true);
 
         this.plugin.getConfig().addDefault("string.admin.jail", "$s You set the jail point!");
         this.plugin.getConfig().addDefault("string.admin.command", "$s You set the jail leave command!");
@@ -142,6 +148,7 @@ public class Configuration {
         this.jailChat = this.plugin.getConfig().getBoolean("jail.allowchat");
         this.jailGriefingextends = this.plugin.getConfig().getBoolean("jail.griefingextends");
         this.jailExtendtime = this.plugin.getConfig().getInt("jail.extendtime");
+        this.jailBroadcast = this.plugin.getConfig().getBoolean("jail.broadcast");
 
         this.jailAdminJail = this.plugin.getConfig().getString("string.admin.jail");
         this.jailAdminCommand = this.plugin.getConfig().getString("string.admin.command");

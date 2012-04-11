@@ -7,18 +7,18 @@ main: com.blockmovers.plugins.simplejailr.SimpleJailr
 name: SimpleJailr
 startup: postworld
 url: http://blockmovers.com/
-version: '0.1'
+version: '0.2'
 commands:
   jail:
     usage: /<command> <action>
     description: SimpleJailr root command
 permissions:
-  simplejail.unjailable:
+  simplejailr.unjailable:
     default: false
     description: Cannot be thrown in jail
-  simplejail.jailor:
+  simplejailr.jailor:
     default: false
     description: Can jail/unjail people
-  simplejail.admin:
+  simplejailr.admin:
     default: false
     description: Can set the jail point and unjail command

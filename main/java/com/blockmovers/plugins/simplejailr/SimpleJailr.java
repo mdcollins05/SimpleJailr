@@ -17,6 +17,7 @@ public class SimpleJailr extends JavaPlugin {
     public Configuration config = new Configuration(this);
     public List<String> jailed = new ArrayList();
 
+    @Override
     public void onEnable() {
         PluginDescriptionFile pdffile = this.getDescription();
         PluginManager pm = this.getServer().getPluginManager(); //the plugin object which allows us to add listeners later on
@@ -44,6 +45,7 @@ public class SimpleJailr extends JavaPlugin {
         log.info(pdffile.getName() + " version " + pdffile.getVersion() + " is enabled.");
     }
 
+    @Override
     public void onDisable() {
         PluginDescriptionFile pdffile = this.getDescription();
 
@@ -57,7 +59,7 @@ public class SimpleJailr extends JavaPlugin {
             if (args[0].equalsIgnoreCase("a") || args[0].equalsIgnoreCase("add")) {
                 String time = "";
                 if (cs instanceof Player) {
-                    if (!cs.hasPermission("simplejail.jailor")) {
+                    if (!cs.hasPermission("simplejailr.jailor")) {
                         cs.sendMessage(this.replaceText(config.jailMiscNoperm, "", ""));
                         return false;
                     }
@@ -71,7 +73,7 @@ public class SimpleJailr extends JavaPlugin {
                 if (getServer().getPlayer(args[1]) != null) {
                     player = getServer().getPlayer(args[1]).getName();
                     online = true;
-                    if (getServer().getPlayer(args[1]).hasPermission("simplejail.unjailable")) {
+                    if (getServer().getPlayer(args[1]).hasPermission("simplejailr.unjailable")) {
                         cs.sendMessage(this.replaceText(config.jailAddBlocked, player, ""));
                         return false;
                     }
@@ -82,7 +84,7 @@ public class SimpleJailr extends JavaPlugin {
                     cs.sendMessage(this.replaceText(config.jailMiscNosuchuser, "", ""));
                     return false;
                 }
-                if (args.length == 3) {
+                if (args.length >= 3) {
                     time = args[2];
                 }
                 this.jailAdd(player, time, online);
@@ -95,7 +97,7 @@ public class SimpleJailr extends JavaPlugin {
             }
             if (args[0].equalsIgnoreCase("r") || args[0].equalsIgnoreCase("release")) {
                 if (cs instanceof Player) {
-                    if (!cs.hasPermission("simplejail.jailor")) {
+                    if (!cs.hasPermission("simplejailr.jailor")) {
                         cs.sendMessage(this.replaceText(config.jailMiscNoperm, "", ""));
                         return false;
                     }
@@ -134,7 +136,7 @@ public class SimpleJailr extends JavaPlugin {
             }
             if (args[0].equalsIgnoreCase("set")) {
                 if (cs instanceof Player) {
-                    if (!cs.hasPermission("simplejail.admin")) {
+                    if (!cs.hasPermission("simplejailr.admin")) {
                         cs.sendMessage(this.replaceText(config.jailMiscNoperm, "", ""));
                         return false;
                     }
@@ -195,7 +197,7 @@ public class SimpleJailr extends JavaPlugin {
                     return false;
                 }
             }
-            if (args[0].equalsIgnoreCase("info")) {
+            if (args[0].equalsIgnoreCase("i") || args[0].equalsIgnoreCase("info")) {
                 if (args.length == 1) {
                     if (cs instanceof Player) {
                         Player p = (Player) cs;
@@ -213,7 +215,7 @@ public class SimpleJailr extends JavaPlugin {
                 } else if (args.length == 2) {
                     if (cs instanceof Player) {
                         Player p = (Player) cs;
-                        if (!p.hasPermission("simplejail.jailor")) {
+                        if (!p.hasPermission("simplejailr.jailor")) {
                             p.sendMessage(this.replaceText(config.jailMiscNoperm, "", ""));
                             return false;
                         }
@@ -269,6 +271,9 @@ public class SimpleJailr extends JavaPlugin {
                 this.jailed.add(p);
             }
         }
+        if (this.config.jailBroadcast) {
+            getServer().broadcastMessage(this.replaceText(this.config.jailAddBroadcast, p, this.timeToString(Integer.valueOf(time.toString()))));
+        }
     }
 
     public void jailRelease(String p, Boolean online, Boolean cmds) {
@@ -292,6 +297,9 @@ public class SimpleJailr extends JavaPlugin {
         } else {
             config.jailedPlayers.set(p, -1);
             config.savejailedPlayers();
+        }
+        if (this.config.jailBroadcast) {
+            getServer().broadcastMessage(this.replaceText(this.config.jailLeaveBroadcast, p, ""));
         }
     }
 
@@ -323,26 +331,33 @@ public class SimpleJailr extends JavaPlugin {
         if (config.jailedPlayers.contains(p)) {
             long timestamp = System.currentTimeMillis() / 1000L;
             Long jailedUntil = this.jailedUntil(p);
+            Boolean online = false;
             if (getServer().getPlayer(p) != null) {
-                if (getServer().getPlayer(p).hasPermission("simplejail.unjailable")) {
+                if (getServer().getPlayer(p).hasPermission("simplejailr.unjailable")) {
                     this.jailRelease(p, true, false);
                     return false;
+                }
+            }
+            if (getServer().getPlayerExact(p) != null) {
+                if (getServer().getPlayerExact(p).isOnline()) {
+                    online = true;
                 }
             }
             if (jailedUntil == 0) {
                 return true;
             }
             if (jailedUntil > timestamp) {
-                if (getServer().getPlayerExact(p).isOnline()) {
+                if (online == true) {
                     if (!this.jailed.contains(p)) {
                         this.jailed.add(p);
                     }
                 }
                 return true;
             }
-            this.jailRelease(p, true, true);
+            this.jailRelease(p, online, true);
             getServer().getPlayer(p).sendMessage(this.replaceText(config.jailLeaveJailee, "", ""));
         }
+
         return false;
     }
 
@@ -454,7 +469,7 @@ public class SimpleJailr extends JavaPlugin {
         if (filter.equalsIgnoreCase("now")) {
             return System.currentTimeMillis();
         }
-        String[] groupings = filter.split("-");
+        String[] groupings = filter.split(",");
         if (groupings.length == 0) {
             return 0;
         }
