@@ -3,6 +3,8 @@ package com.blockmovers.plugins.simplejailr;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.bukkit.Location;
@@ -18,7 +20,9 @@ public class Configuration {
     //Config settings
     //Integer chanceAnnounce = null;
     //Boolean defaultNobreak = null;
+    String jailLeaveUse = null;
     String[] jailLeaveCommand = null;
+    String[] jailLeaveCoords = null;
     String jailLeaveJailee = null;
     String jailLeaveJailor = null;
     String jailLeaveBroadcast = null;
@@ -52,16 +56,24 @@ public class Configuration {
     Integer jailExtendtime = null;
     Boolean jailBroadcast = null;
     String jailAdminJail = null;
+    String jailAdminLeave = null;
+    String jailAdminRelease = null;
     String jailAdminCommand = null;
     String jailAdminChaton = null;
     String jailAdminChatoff = null;
+    String jailAdminBroadcaston = null;
+    String jailAdminBroadcastoff = null;
+    String jailAdminGriefextendon = null;
+    String jailAdminGriefextendoff = null;
 
     public Configuration(SimpleJailr plugin) {
         this.plugin = plugin;
     }
 
     public void loadConfiguration() {
+        this.plugin.getConfig().addDefault("jail.leave.use", "command");
         this.plugin.getConfig().addDefault("jail.leave.command", "spawn");
+        this.plugin.getConfig().addDefault("jail.leave.coords", "world,x,y,z,yaw,pitch");
         this.plugin.getConfig().addDefault("string.leave.jailee", "$s You have been released from jail!");
         this.plugin.getConfig().addDefault("string.leave.jailor", "$s You have released $p from jail!");
         this.plugin.getConfig().addDefault("string.leave.broadcast", "$s $p was released from jail!");
@@ -101,9 +113,15 @@ public class Configuration {
         this.plugin.getConfig().addDefault("jail.broadcast", true);
 
         this.plugin.getConfig().addDefault("string.admin.jail", "$s You set the jail point!");
+        this.plugin.getConfig().addDefault("string.admin.leave", "$s You set the jail release use option!");
+        this.plugin.getConfig().addDefault("string.admin.release", "$s You set the jail release point!");
         this.plugin.getConfig().addDefault("string.admin.command", "$s You set the jail leave command!");
         this.plugin.getConfig().addDefault("string.admin.chaton", "$s You turned jailee chat ON!");
         this.plugin.getConfig().addDefault("string.admin.chatoff", "$s You turned jailee chat OFF!");
+        this.plugin.getConfig().addDefault("string.admin.broadcaston", "$s You turned jail broadcast ON!");
+        this.plugin.getConfig().addDefault("string.admin.broadcastoff", "$s You turned jail broadcast OFF!");
+        this.plugin.getConfig().addDefault("string.admin.griefextendon", "$s You turned jail grief time extender ON!");
+        this.plugin.getConfig().addDefault("string.admin.griefextendoff", "$s You turned jail grief time extender OFF!");
 
         this.plugin.getConfig().options().copyDefaults(true);
         //Save the config whenever you manipulate it
@@ -113,13 +131,17 @@ public class Configuration {
     }
 
     public void setVars() {
+        this.jailLeaveUse = this.plugin.getConfig().getString("jail.leave.use");
         this.jailLeaveCommand = this.plugin.getConfig().getString("jail.leave.command").split(";");
+        this.jailLeaveCoords = this.plugin.getConfig().getString("jail.leave.coords").split(",");
         this.jailLeaveJailee = this.plugin.getConfig().getString("string.leave.jailee");
         this.jailLeaveJailor = this.plugin.getConfig().getString("string.leave.jailor");
+        this.jailLeaveBroadcast = this.plugin.getConfig().getString("string.leave.broadcast");
 
         this.jailAddJailee = this.plugin.getConfig().getString("string.add.jailee");
         this.jailAddJailor = this.plugin.getConfig().getString("string.add.jailor");
         this.jailAddBlocked = this.plugin.getConfig().getString("string.add.blocked");
+        this.jailAddBroadcast = this.plugin.getConfig().getString("string.add.broadcast");
 
         this.jailInfoSelf = this.plugin.getConfig().getString("string.info.self");
         this.jailInfoOther = this.plugin.getConfig().getString("string.info.other");
@@ -151,14 +173,20 @@ public class Configuration {
         this.jailBroadcast = this.plugin.getConfig().getBoolean("jail.broadcast");
 
         this.jailAdminJail = this.plugin.getConfig().getString("string.admin.jail");
+        this.jailAdminLeave = this.plugin.getConfig().getString("string.admin.leave");
+        this.jailAdminRelease = this.plugin.getConfig().getString("string.admin.release");
         this.jailAdminCommand = this.plugin.getConfig().getString("string.admin.command");
         this.jailAdminChaton = this.plugin.getConfig().getString("string.admin.chaton");
         this.jailAdminChatoff = this.plugin.getConfig().getString("string.admin.chatoff");
+        this.jailAdminBroadcaston = this.plugin.getConfig().getString("string.admin.broadcaston");
+        this.jailAdminBroadcastoff = this.plugin.getConfig().getString("string.admin.broadcastoff");
+        this.jailAdminGriefextendon = this.plugin.getConfig().getString("string.admin.griefextendon");
+        this.jailAdminGriefextendoff = this.plugin.getConfig().getString("string.admin.griefextendoff");
 
         this.getjailedPlayers();
     }
 
-    public void updateCoords(Location loc) {
+    public void updateJailCoords(Location loc) {
         String[] jailCoords = new String[6];
         jailCoords[0] = loc.getWorld().getName();
         jailCoords[1] = Double.toString(loc.getX());
@@ -179,6 +207,42 @@ public class Configuration {
         this.plugin.saveConfig();
         this.setVars();
     }
+    
+    public void updateReleaseCoords(Location loc) {
+        String[] jailCoords = new String[6];
+        jailCoords[0] = loc.getWorld().getName();
+        jailCoords[1] = Double.toString(loc.getX());
+        jailCoords[2] = Double.toString(loc.getY());
+        jailCoords[3] = Double.toString(loc.getZ());
+        jailCoords[4] = Float.toString(loc.getYaw());
+        jailCoords[5] = Float.toString(loc.getPitch());
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(jailCoords[0]);
+
+        for (int i = 1; i < jailCoords.length; i++) {
+            sb.append(",");
+            sb.append(jailCoords[i]);
+        }
+
+        this.plugin.getConfig().set("jail.leave.coords", sb.toString());
+        this.plugin.saveConfig();
+        this.setVars();
+    }
+    
+    public boolean updateLeaveUse(String use) {
+        List options = new ArrayList();
+        options.add("both");
+        options.add("command");
+        options.add("teleport");
+        if (options.contains(use)) {
+            this.plugin.getConfig().set("jail.leave.use", use);
+            this.plugin.saveConfig();
+            this.setVars();
+            return true;
+        }
+        return false;
+    }
 
     public void updateCommand(String command) {
         if (command.isEmpty()) {
@@ -188,7 +252,41 @@ public class Configuration {
         this.plugin.saveConfig();
         this.setVars();
     }
+    
+    public boolean updateGriefingextends(Boolean on) {
+        if (on == null) {
+            if (this.jailGriefingextends) {
+                plugin.getConfig().set("jail.griefingextends", false);
+            } else {
+                plugin.getConfig().set("jail.griefingextends", true);
+            }
+        } else if (on) {
+            plugin.getConfig().set("jail.griefingextends", true);
+        } else {
+            plugin.getConfig().set("jail.griefingextends", false);
+        }
+        this.plugin.saveConfig();
+        this.setVars();
+        return this.jailGriefingextends;
+    }
 
+    public boolean updateBroadcast(Boolean on) {
+        if (on == null) {
+            if (this.jailBroadcast) {
+                plugin.getConfig().set("jail.broadcast", false);
+            } else {
+                plugin.getConfig().set("jail.broadcast", true);
+            }
+        } else if (on) {
+            plugin.getConfig().set("jail.broadcast", true);
+        } else {
+            plugin.getConfig().set("jail.broadcast", false);
+        }
+        this.plugin.saveConfig();
+        this.setVars();
+        return this.jailBroadcast;
+    }
+    
     public boolean updateChat(Boolean on) {
         if (on == null) {
             if (this.jailChat) {

@@ -121,7 +121,7 @@ public class SimpleJailr extends JavaPlugin {
                         cs.sendMessage(this.replaceText(config.jailInfoNotinOther, player, ""));
                         return false;
                     }
-                    online = true;
+                    online = false;
                 } else {
                     cs.sendMessage(this.replaceText(config.jailMiscNosuchuser, "", ""));
                     return false;
@@ -129,7 +129,7 @@ public class SimpleJailr extends JavaPlugin {
                 this.jailRelease(player, online, true);
                 log.info(getDescription().getName() + "- " + cs.getName() + " released " + player);
                 if (online) {
-                    getServer().getPlayer(args[1]).sendMessage(this.replaceText(config.jailLeaveJailee, "", ""));
+                    getServer().getPlayer(player).sendMessage(this.replaceText(config.jailLeaveJailee, "", ""));
                 }
                 cs.sendMessage(this.replaceText(config.jailLeaveJailor, player, ""));
                 return true;
@@ -151,10 +151,29 @@ public class SimpleJailr extends JavaPlugin {
                 if (args[1].equalsIgnoreCase("jail")) {
                     Location loc = p.getLocation();
 
-                    config.updateCoords(loc);
+                    config.updateJailCoords(loc);
                     p.sendMessage(this.replaceText(config.jailAdminJail, "", ""));
                     return true;
                 } else if (args[1].equalsIgnoreCase("leave")) {
+                    if (args.length == 3) {
+                        if (config.updateLeaveUse(args[2])) {
+                            p.sendMessage(this.replaceText(config.jailAdminLeave, "", ""));
+                            return true;
+                        } else {
+                            p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
+                            return false;
+                        }
+                    } else {
+                        p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
+                        return false;
+                    }
+                } else if (args[1].equalsIgnoreCase("leavetp")) {
+                    Location loc = p.getLocation();
+
+                    config.updateReleaseCoords(loc);
+                    p.sendMessage(this.replaceText(config.jailAdminRelease, "", ""));
+                    return true;
+                } else if (args[1].equalsIgnoreCase("leavecmd")) {
                     if (args.length >= 3) {
                         String command = "";
                         for (int i = 2; i < args.length; i++) {
@@ -183,6 +202,56 @@ public class SimpleJailr extends JavaPlugin {
                         } else if (args[2].equalsIgnoreCase(config.jailMiscOff)) {
                             config.updateChat(false);
                             p.sendMessage(this.replaceText(config.jailAdminChatoff, "", ""));
+                            return true;
+                        } else {
+                            p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
+                            return false;
+                        }
+                    } else {
+                        p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
+                        return false;
+                    }
+                } else if (args[1].equalsIgnoreCase("broadcast")) {
+                    if (args.length == 2) {
+                        if (config.updateBroadcast(null)) {
+                            p.sendMessage(this.replaceText(config.jailAdminBroadcaston, "", ""));
+                        } else {
+                            p.sendMessage(this.replaceText(config.jailAdminBroadcastoff, "", ""));
+                        }
+                        return true;
+                    } else if (args.length == 3) {
+                        if (args[2].equalsIgnoreCase(config.jailMiscOn)) {
+                            config.updateBroadcast(true);
+                            p.sendMessage(this.replaceText(config.jailAdminBroadcaston, "", ""));
+                            return true;
+                        } else if (args[2].equalsIgnoreCase(config.jailMiscOff)) {
+                            config.updateBroadcast(false);
+                            p.sendMessage(this.replaceText(config.jailAdminBroadcastoff, "", ""));
+                            return true;
+                        } else {
+                            p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
+                            return false;
+                        }
+                    } else {
+                        p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
+                        return false;
+                    }
+                } else if (args[1].equalsIgnoreCase("griefingextends") || args[1].equalsIgnoreCase("griefing") || args[1].equalsIgnoreCase("grief")) {
+                    if (args.length == 2) {
+                        if (config.updateGriefingextends(null)) {
+                            p.sendMessage(this.replaceText(config.jailAdminGriefextendon, "", ""));
+                        } else {
+                            p.sendMessage(this.replaceText(config.jailAdminGriefextendoff, "", ""));
+                        }
+                        return true;
+                    } else if (args.length == 3) {
+                        if (args[2].equalsIgnoreCase(config.jailMiscOn)) {
+                            config.updateGriefingextends(true);
+                            p.sendMessage(this.replaceText(config.jailAdminGriefextendon, "", ""));
+                            return true;
+                        } else if (args[2].equalsIgnoreCase(config.jailMiscOff)) {
+                            config.updateGriefingextends(false);
+                            p.sendMessage(this.replaceText(config.jailAdminGriefextendoff, "", ""));
                             return true;
                         } else {
                             p.sendMessage(this.replaceText(config.jailMiscNocommand, "", ""));
@@ -271,8 +340,9 @@ public class SimpleJailr extends JavaPlugin {
                 this.jailed.add(p);
             }
         }
+
         if (this.config.jailBroadcast) {
-            getServer().broadcastMessage(this.replaceText(this.config.jailAddBroadcast, p, this.timeToString(Integer.valueOf(time.toString()))));
+            getServer().broadcastMessage(this.replaceText(this.config.jailAddBroadcast, p, this.jailTimeLeftString(p)));
         }
     }
 
@@ -286,11 +356,17 @@ public class SimpleJailr extends JavaPlugin {
             }
 
             if (cmds) {
-                for (String cmd : config.jailLeaveCommand) {
-                    try {
-                        getServer().dispatchCommand(player, cmd);
-                    } catch (CommandException e) {
-                        player.chat("/" + cmd);
+                if (config.jailLeaveUse.equalsIgnoreCase("both") || config.jailLeaveUse.equalsIgnoreCase("teleport")) {
+                    String[] jailCoords = this.config.jailLeaveCoords;
+                    player.teleport(new Location(player.getServer().getWorld(jailCoords[0]), Double.valueOf(jailCoords[1]), Double.valueOf(jailCoords[2]), Double.valueOf(jailCoords[3]), Float.valueOf(jailCoords[4]), Float.valueOf(jailCoords[5])));
+                }
+                if (config.jailLeaveUse.equalsIgnoreCase("both") || config.jailLeaveUse.equalsIgnoreCase("command")) {
+                    for (String cmd : config.jailLeaveCommand) {
+                        try {
+                            getServer().dispatchCommand(player, cmd);
+                        } catch (CommandException e) {
+                            player.chat("/" + cmd);
+                        }
                     }
                 }
             }
@@ -320,7 +396,8 @@ public class SimpleJailr extends JavaPlugin {
             Long time = this.jailedUntil(p);
             if (time > 0) {
                 time = time + this.config.jailExtendtime;
-                this.jailAdd(p, time, false);
+                config.jailedPlayers.set(p, time);
+                config.savejailedPlayers();
                 return true;
             }
         }
