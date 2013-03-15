@@ -18,8 +18,6 @@ public class Configuration {
     FileConfiguration jailedPlayers = null;
     private File jailedPlayersFile = null;
     //Config settings
-    //Integer chanceAnnounce = null;
-    //Boolean defaultNobreak = null;
     String jailLeaveUse = null;
     String[] jailLeaveCommand = null;
     String[] jailLeaveCoords = null;
@@ -50,7 +48,7 @@ public class Configuration {
     String jailMiscForever = null;
     String jailMiscOn = null;
     String jailMiscOff = null;
-    String[] jailCoords = null;
+    //String[] jailCoords = null;
     Boolean jailChat = false;
     Boolean jailGriefingextends = null;
     Integer jailExtendtime = null;
@@ -166,7 +164,7 @@ public class Configuration {
         this.jailMiscOn = this.plugin.getConfig().getString("string.misc.on");
         this.jailMiscOff = this.plugin.getConfig().getString("string.misc.off");
 
-        this.jailCoords = this.plugin.getConfig().getString("jail.coords").split(",");
+        //this.jailCoords = this.plugin.getConfig().getString("jail.coords").split(",");
         this.jailChat = this.plugin.getConfig().getBoolean("jail.allowchat");
         this.jailGriefingextends = this.plugin.getConfig().getBoolean("jail.griefingextends");
         this.jailExtendtime = this.plugin.getConfig().getInt("jail.extendtime");
@@ -186,7 +184,7 @@ public class Configuration {
         this.getjailedPlayers();
     }
 
-    public void updateJailCoords(Location loc) {
+    public void updateJailCoords(String name, Location loc) {
         String[] jailCoords = new String[6];
         jailCoords[0] = loc.getWorld().getName();
         jailCoords[1] = Double.toString(loc.getX());
@@ -208,7 +206,7 @@ public class Configuration {
         this.setVars();
     }
     
-    public void updateReleaseCoords(Location loc) {
+    public void updateReleaseCoords(String name, Location loc) {
         String[] jailCoords = new String[6];
         jailCoords[0] = loc.getWorld().getName();
         jailCoords[1] = Double.toString(loc.getX());
@@ -230,7 +228,7 @@ public class Configuration {
         this.setVars();
     }
     
-    public boolean updateLeaveUse(String use) {
+    public boolean updateLeaveUse(String name, String use) {
         List options = new ArrayList();
         options.add("both");
         options.add("command");
@@ -244,7 +242,7 @@ public class Configuration {
         return false;
     }
 
-    public void updateCommand(String command) {
+    public void updateCommand(String name, String command) {
         if (command.isEmpty()) {
             return;
         }

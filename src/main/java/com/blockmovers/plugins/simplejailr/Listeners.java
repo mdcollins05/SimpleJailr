@@ -51,10 +51,10 @@ public class Listeners implements Listener {
         }
         Player p = event.getPlayer();
         String player = p.getName();
-        if (plugin.isJailed(player)) {
-            if (plugin.config.jailGriefingextends) {
-                if (plugin.jailAddTime(player)) {
-                    p.sendMessage(plugin.replaceText(plugin.config.jailInfoTimeextended, player, plugin.timeToString(plugin.config.jailExtendtime)));
+        if (this.plugin.utils.isJailed(player)) {
+            if (this.plugin.config.jailGriefingextends) {
+                if (this.plugin.utils.jailAddTime(player)) {
+                    p.sendMessage(this.plugin.utils.replaceText(this.plugin.config.jailInfoTimeextended, player, this.plugin.utils.timeToString(this.plugin.config.jailExtendtime)));
                 }
             }
             event.setCancelled(true);
@@ -66,8 +66,8 @@ public class Listeners implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (!plugin.config.jailChat) {
-            if (plugin.isJailed(event.getPlayer().getName())) {
+        if (!this.plugin.config.jailChat) {
+            if (this.plugin.utils.isJailed(event.getPlayer().getName())) {
                 event.setCancelled(true);
             }
         }
@@ -78,7 +78,7 @@ public class Listeners implements Listener {
         if (event.isCancelled()) {
             return;
         }
-        if (plugin.isJailed(event.getPlayer().getName())) {
+        if (this.plugin.utils.isJailed(event.getPlayer().getName())) {
             Boolean exception = false;
             if (event.getMessage().equals("/jail")) {
                 exception = true;
@@ -94,11 +94,11 @@ public class Listeners implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        if (plugin.isJailed(event.getPlayer().getName())) {
+        if (this.plugin.utils.isJailed(event.getPlayer().getName())) {
             Player p = event.getPlayer();
             String player = p.getName();
-            plugin.teleportToJail(p);
-            p.sendMessage(plugin.replaceText(plugin.config.jailInfoSelf, "", plugin.jailTimeLeftString(player)));
+            this.plugin.utils.teleportToJail(p);
+            p.sendMessage(this.plugin.utils.replaceText(this.plugin.config.jailInfoSelf, "", this.plugin.utils.jailTimeLeftString(player)));
         }
     }
 
