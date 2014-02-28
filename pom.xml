@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.blockmovers.plugins.simplejailr</groupId>
     <artifactId>SimpleJailr</artifactId>
-    <version>4</version>
+    <version>${env.BUILD_NUMBER}</version>
     <name>SimpleJailr</name>
     <url>http://blockmovers.com/</url>
     <repositories>
@@ -11,18 +11,8 @@
             <url>http://repo.bukkit.org/content/groups/public</url>
         </repository>
     </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>autoincrement-versions-maven-plugin</id>
-            <name>autoincrement-versions-maven-plugin</name>
-            <url>http://autoincrement-versions-maven-plugin.googlecode.com/svn/repo</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </pluginRepository>
-    </pluginRepositories>
     <build>
-        <finalName>${artifactId}</finalName>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -32,24 +22,6 @@
                     <source>1.5</source>
                     <target>1.5</target>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>autoincrement-versions-maven-plugin</artifactId>
-                <version>2.0-SNAPSHOT</version>
-                <executions>
-                    <execution>
-                        <id>update-pom-versions</id>
-                        <goals>
-                            <goal>increment</goal>
-                            <goal>commit</goal>
-                        </goals>
-                        <phase>compile</phase>
-                        <configuration>
-                            <autoIncrementVersion>true</autoIncrementVersion>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
         <resources>
@@ -63,7 +35,7 @@
         <dependency>
             <groupId>org.bukkit</groupId>
             <artifactId>bukkit</artifactId>
-            <version>1.4.2-R0.2</version>
+            <version>1.7.2-R0.3</version>
             <type>jar</type>
             <scope>compile</scope>
         </dependency>
